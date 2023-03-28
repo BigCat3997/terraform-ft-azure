@@ -13,3 +13,9 @@ export ARM_CLIENT_SECRET=
 export ARM_SUBSCRIPTION_ID=
 export ARM_TENANT_ID=
 ```
+
+```bash
+export TF_VAR_resource_group=''
+export TF_VAR_storage_account=''
+export TF_VAR_function_app=''
+```

@@ -33,5 +33,8 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# ignore file set environment variables
+# Ignore file set environment variables
 execute.sh
+
+# Ignore input json file
+local-values.json

@@ -2,12 +2,12 @@ locals {
   local_data = jsondecode(file("./local-values.json"))
 }
 
-module "local_storage_account" {
-  source               = "../../modules/storage-account"
-  storage_account_name = local.local_data.storage_account_name
-  resource_group       = local.local_data.resource_group
-}
+module "local_resource_group" {
+  source = "../../modules/resource-group"
+  for_each = tomap({
+    for t in local.local_data.resource_groups :
+    "${t.name}:${t.location}" => t
+  })
 
-output "local_storage_account" {
-  value = module.local_storage_account.azurerm_storage_account_output
+  resource_group = each.value
 }

@@ -37,4 +37,4 @@ terraform.rc
 execute.sh
 
 # Ignore input json file
-local-values.json
+local-data.json

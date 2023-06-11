@@ -1,0 +1,146 @@
+trigger: none
+
+parameters:
+- name: resourceGroupNames
+  displayName: Resource group names (Check naming convention if exist)
+  type: object
+  default:
+    - rgstarter02
+    - rgstarter03
+
+- name: resourceGroupLocation
+  displayName: Resource group location (Check naming convention if exist)
+  type: string
+  values:
+    - eastus
+    - eastus2
+    - southcentralus
+    - westus2
+    - westus3
+    - australiaeast
+    - southeastasia
+    - northeurope
+    - swedencentral
+    - uksouth
+    - westeurope
+    - centralus
+    - southafricanorth
+    - centralindia
+    - eastasia
+    - japaneast
+    - koreacentral
+  default: eastasia
+
+variables:
+  vmImage: 'ubuntu-latest'
+
+  terraformDir: '$(System.DefaultWorkingDirectory)/resources/terraform'
+  terraformDestroyDir: '$(System.DefaultWorkingDirectory)/$(Build.DefinitionName)-$(Build.BuildNumber)'
+  terraformTemplateDir: '$(terraformDir)/entrypoints/simple-resource-group'
+  functionUtilsDir: '$(System.DefaultWorkingDirectory)/function-utils'
+
+stages:
+- stage: Create
+  jobs:
+  - job: CreateResouceGroups
+    displayName: Create resource groups
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - bash: |
+        export RESOURCE_GROUP_NAMES_JSON=$(jq --compact-output '' <<< ${RESOURCE_GROUP_NAMES_PARAM_JSON})
+        echo "##vso[task.setvariable variable=RESOURCE_GROUP_NAMES_JSON]$RESOURCE_GROUP_NAMES_JSON"
+
+        echo "##vso[task.setvariable variable=RESOURCE_GROUP_LOCATION]${{ parameters.resourceGroupLocation }}"
+      env:
+        RESOURCE_GROUP_NAMES_PARAM_JSON: ${{ convertToJson(parameters.resourceGroupNames) }}
+      displayName: Set up input variables
+
+    - bash: |
+        export content_json=$(python $(System.DefaultWorkingDirectory)/function-utils/terraform_create_resource_group_adapter/main.py)
+        echo $content_json | python -m json.tool > local-data.json
+        cat local-data.json
+      workingDirectory: $(terraformTemplateDir)
+      displayName: Create local-data.json file
+
+    - bash: |
+        ls -a
+      workingDirectory: $(terraformTemplateDir)
+      displayName: Verify content of the folder
+
+    # - bash: |
+    #     git config --global url."https://$(gitUser):$(gitToken)@github.com".insteadOf https://github.com
+    #     cat ~/.gitconfig
+    #   displayName: Point to Git credential
+
+    - bash: |
+        terraform init
+      workingDirectory: $(terraformTemplateDir)
+      displayName: Terraform init
+
+    - bash: |
+        terraform validate
+      workingDirectory: $(terraformTemplateDir)
+      displayName: Terraform validate
+
+    - bash: |
+        terraform apply -auto-approve
+      env:
+        ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+        ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+        ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+        ARM_TENANT_ID: $(ARM_TENANT_ID)
+      workingDirectory: $(terraformTemplateDir)
+      continueOnError: true
+      displayName: Terraform apply
+
+
+    - bash: |
+        azcopy copy "./*" "https://$(storageAccountName).blob.core.windows.net/$(containerName)/$FOLDER_NAME$(sasToken)" --recursive=true --exclude-path ".terraform"
+      env:
+        FOLDER_NAME: '$(Build.DefinitionName)-$(Build.BuildNumber)'
+      workingDirectory: $(terraformTemplateDir)
+      displayName: Terraform archive
+
+- stage: Delete
+  jobs:
+  - deployment: CreateResouceGroups
+    displayName: Delete resource groups
+    environment: TERRAFORM_DESTROY
+    strategy:
+        runOnce:
+          deploy:
+            steps:
+            - bash: |
+                azcopy copy "https://$(storageAccountName).blob.core.windows.net/$(containerName)/$FOLDER_NAME$(sasToken)" "." --recursive=true
+              env:
+                FOLDER_NAME: '$(Build.DefinitionName)-$(Build.BuildNumber)'
+              workingDirectory: $(System.DefaultWorkingDirectory)
+              displayName: Download state of Terraform in blob
+
+            - bash: |
+                ls -la
+              workingDirectory: $(terraformDestroyDir)
+              displayName: Terraform verify downloaded files
+
+            - bash: |
+                terraform init
+              workingDirectory: $(terraformDestroyDir)
+              displayName: Terraform init
+
+            - bash: |
+                terraform destroy -auto-approve
+              env:
+                ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+                ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+                ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+                ARM_TENANT_ID: $(ARM_TENANT_ID)
+              workingDirectory: $(terraformDestroyDir)
+              displayName: Terraform destroy
+
+            - bash: |
+                azcopy rm "https://$(storageAccountName).blob.core.windows.net/$(containerName)/$FOLDER_NAME$(sasToken)" --recursive=true
+              env:
+                FOLDER_NAME: '$(Build.DefinitionName)-$(Build.BuildNumber)'
+              workingDirectory: $(terraformDestroyDir)
+              displayName: Terraform remove archieve

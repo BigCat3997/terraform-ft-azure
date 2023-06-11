@@ -12,6 +12,6 @@ variable "resource_group" {
 }
 
 variable "application_insights_name" {
-  type = string
+  type        = string
   description = "a name of application insights"
 }

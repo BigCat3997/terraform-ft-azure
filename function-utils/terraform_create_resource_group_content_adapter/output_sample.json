@@ -1,0 +1,12 @@
+{
+    "resource_groups": [
+        {
+            "name": "<NAME>",
+            "location": "LOCATION"
+        },
+        {
+            "name": "<NAME>",
+            "location": "<LOCATION>"
+        }
+    ]
+}

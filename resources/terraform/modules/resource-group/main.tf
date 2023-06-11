@@ -1,9 +1,9 @@
 resource "azurerm_resource_group" "new_resource" {
   name     = var.resource_group.name
   location = var.resource_group.location
-
+  
   tags = {
-    Environment = "Terraform Getting Started"
-    Team        = "DevOps"
+    Team      = "DevOps"
+    Terraform = true
   }
 }

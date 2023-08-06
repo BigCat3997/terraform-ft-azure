@@ -1,0 +1,9 @@
+{
+    "resource_group": {
+        "name": "",
+        "location": ""
+    },
+    "cosmos_db_account_names": [
+        ""
+    ]
+}

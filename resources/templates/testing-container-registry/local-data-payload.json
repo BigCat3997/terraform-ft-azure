@@ -1,0 +1,12 @@
+{
+    "names": [
+        ""
+    ],
+    "configuration": {
+        "resource_group": {
+            "name": "",
+            "location": ""
+        },
+        "sku": ""
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "resource_group": {
+        "name": "",
+        "location": ""
+    },
+    "k8s_cluster_names": [
+        ""
+    ],
+    "configuration": {
+        "vm_size": ""
+    }
+}

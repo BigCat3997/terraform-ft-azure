@@ -1,3 +1,8 @@
+variable "cosmosdb_account_name" {
+  type        = string
+  description = "a name of cosmos database account"
+}
+
 variable "resource_group" {
   type = object({
     name     = string
@@ -9,11 +14,6 @@ variable "resource_group" {
       location : "a location of resource group"
     }
   EOT
-}
-
-variable "cosmosdb_account_name" {
-  type        = string
-  description = "a name of cosmos database account"
 }
 
 variable "configuration" {

@@ -1,3 +1,8 @@
+variable "name" {
+  type        = string
+  description = "a name of k8s cluster"
+}
+
 variable "resource_group" {
   type = object({
     name     = string
@@ -11,14 +16,9 @@ variable "resource_group" {
   EOT
 }
 
-variable "k8s_cluster_name" {
-  type        = string
-  description = "a name of k8s cluster"
-}
-
 variable "configuration" {
   type = object({
-    vm_size     = string
+    vm_size = string
   })
   description = <<EOT
     configuration = {

@@ -3,7 +3,7 @@
         "name": "",
         "location": ""
     },
-    "k8s_cluster_names": [
+    "name": [
         ""
     ],
     "configuration": {

@@ -1,12 +1,12 @@
-variable "resource_group" {
-  type = object({
-    name     = string
+variable "resource_groups" {
+  description = "Resource groups"
+  type = map(object({
     location = string
-  })
-  description = <<EOT
-    resource_group = {
-      name : "a name of resource group"
-      location : "a location of resource group"
-    }
-  EOT
+  }))
+}
+
+variable "tags" {
+  description = "Tags of resource groups"
+  type        = map(string)
+  default     = {}
 }
